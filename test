@@ -1,0 +1,54 @@
+import tkinter as tk
+from tkinter import ttk
+
+class scroller(tk.Frame):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.mainframe = tk.Frame(self, highlightthickness=0)
+        self.mainframe.pack(fill=tk.BOTH, side=tk.LEFT, expand=1, anchor=tk.NW)
+        self.canvas = tk.Canvas(self.mainframe, highlightthickness=0, bg="red")
+        self.frame = tk.Frame(self.canvas, bg="red")
+        self.scrollbar = ttk.Scrollbar(self.mainframe, orient=tk.VERTICAL, command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.canvas.pack(fill=tk.BOTH, expand=0, side=tk.LEFT)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y, anchor=tk.NE)
+        self.canvas.create_window((0, 0), window=self.frame, anchor=tk.NW)
+        self.frame.bind("<Configure>", lambda event, canvas=self.canvas: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.frame.bind("<Configure>", self.update_scroll_region)
+        # self.frame.bind("<Enter>", self.enter_mousewheel, add="+")
+        # self.frame.bind("<Leave>", self.leave_mousewheel)
+    def update_scroll_region(self, *event):
+        print(self.frame.winfo_height())
+        print(self.canvas.winfo_height())
+        if self.frame.winfo_height() <= self.canvas.winfo_height():
+            self.scrollbar.pack_forget()
+            self.canvas.configure(yscrollcommand=None)
+            self.canvas.unbind("<Enter>")
+            self.canvas.unbind("<MouseWheel>")
+        else:
+            self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            self.canvas.configure(yscrollcommand=self.scrollbar.set)
+            self.canvas.bind("<Enter>", self.enter_mousewheel, add="+")
+        self.canvas.configure(scrollregion=(0, 0, self.frame.winfo_width(), self.frame.winfo_height()))
+    def top(self):self.canvas.yview_moveto(0.0)
+    def on_mousewheel(self, event): self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    def enter_mousewheel(self, event): self.canvas.bind('<MouseWheel>', self.on_mousewheel, add="+")
+    def leave_mousewheel(self, event): self.canvas.unbind('<MouseWheel>')
+
+root = tk.Tk()
+root.attributes("-fullscreen", True)
+
+adm_T_C_scroller = scroller(root)
+adm_T_C_scroller.pack(fill=tk.BOTH, side=tk.LEFT, expand=1, anchor=tk.N)
+
+for i in range(10):
+    label = tk.Label(adm_T_C_scroller.frame, text=f"Label {i + 1}")
+    label.pack(fill=tk.BOTH, expand=1)
+
+adm_T_C_scroller.update_scroll_region()
+adm_T_C_scroller.top()
+
+
+
+root.mainloop()
